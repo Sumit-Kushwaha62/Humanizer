@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API = 'https://humanizer-47dt.onrender.com';
+//const API = 'https://humanizer-47dt.onrender.com';
+const API = 'https://humanizer-47dt.onrender.com/api/humanize';
 
 function StatsBar({ stats, apiCalls, apiSaved }) {
   const scoreDrop = stats.scoreBefore - stats.scoreAfter;
