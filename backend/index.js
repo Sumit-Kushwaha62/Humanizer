@@ -5,7 +5,14 @@ require('dotenv').config();
 const humanizeRouter = require('./routes/humanize');
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://humanizer-frontend-ji1t.onrender.com'
+  ]
+}));
+
 app.use(express.json());
 
 app.use('/api/humanize', humanizeRouter);
