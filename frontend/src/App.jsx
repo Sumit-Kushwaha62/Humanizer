@@ -255,7 +255,7 @@ export default function App() {
               <button className="logout-btn" onClick={handleLogout}>Logout</button>
             </div>
           ) : (
-            <button className="login-btn" onClick={handleLogin}>Login with Google</button>
+            <button className="login-btn" onClick={() => setShowAuthModal(true)}>Login / Sign Up</button>
           )}
           <div className="header-badge">Powered by Gemini AI</div>
         </div>
