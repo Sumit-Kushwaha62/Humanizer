@@ -98,6 +98,14 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
+  // Auth Modal States
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authTab, setAuthTab] = useState('login'); // 'login' or 'signup'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -110,12 +118,38 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogin = () => supabase.auth.signInWithOAuth({ 
+  const handleGoogleLogin = () => supabase.auth.signInWithOAuth({ 
     provider: 'google', 
     options: { redirectTo: 'https://humanizer-frontend-ji1t.onrender.com' } 
   });
   
   const handleLogout = () => supabase.auth.signOut();
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true); setAuthError('');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setShowAuthModal(false);
+      setEmail('');
+      setPassword('');
+    }
+    setAuthLoading(false);
+  };
+
+  const handleEmailSignup = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true); setAuthError('');
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setAuthError('Check your email to confirm your account!');
+    }
+    setAuthLoading(false);
+  };
 
   const loadHistory = async () => {
     if (!user) return;
@@ -362,6 +396,66 @@ export default function App() {
           Tip: Use <b>Aggressive</b> mode for heavily AI-sounding text. Standard works best for lightly edited content.
         </p>
       </div>
+
+      {/* AUTH MODAL */}
+      {showAuthModal && (
+        <div className="auth-overlay">
+          <div className="auth-modal">
+            <button className="auth-close" onClick={() => setShowAuthModal(false)}>✕</button>
+            
+            <div className="auth-tabs">
+              <button 
+                className={`auth-tab-btn ${authTab === 'login' ? 'active' : ''}`}
+                onClick={() => { setAuthTab('login'); setAuthError(''); }}
+              >
+                Login
+              </button>
+              <button 
+                className={`auth-tab-btn ${authTab === 'signup' ? 'active' : ''}`}
+                onClick={() => { setAuthTab('signup'); setAuthError(''); }}
+              >
+                Sign Up
+              </button>
+            </div>
+
+            <form onSubmit={authTab === 'login' ? handleEmailLogin : handleEmailSignup}>
+              {authError && (
+                <div className={`auth-error ${authError.includes('Check your email') ? 'success' : ''}`}>
+                  {authError}
+                </div>
+              )}
+              
+              <input 
+                type="email" 
+                className="auth-input" 
+                placeholder="Email address" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <input 
+                type="password" 
+                className="auth-input" 
+                placeholder="Password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              
+              <button className="auth-submit-btn" type="submit" disabled={authLoading}>
+                {authLoading ? '...' : (authTab === 'login' ? 'Login' : 'Create Account')}
+              </button>
+            </form>
+
+            <div className="auth-divider">— or —</div>
+
+            <button className="auth-google-btn" onClick={handleGoogleLogin}>
+              <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"></path><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"></path><path d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.712s.102-1.173.282-1.712V4.956H.957C.347 6.173 0 7.548 0 9s.347 2.827.957 4.044l3.007-2.332z" fill="#FBBC05"></path><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.443 2.048.957 4.956L3.964 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"></path></svg>
+              Continue with Google
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
