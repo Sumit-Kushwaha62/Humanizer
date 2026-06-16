@@ -306,3 +306,123 @@ body {
 .stat-method-icon { font-size: 16px; margin: 2px 0; }
 .stat-method-name { font-size: 13px; font-weight: 500; color: #1C1C1E; }
 .stats-divider { height: 1px; background: #EAE6DC; margin-top: 14px; }
+
+/* AUTH & HEADER ACTIONS */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-email {
+  font-size: 13px;
+  color: #6B6660;
+  font-weight: 500;
+}
+
+.login-btn {
+  background: #3D5C41;
+  color: #F5F2EC;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.login-btn:hover { background: #2E4732; }
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #D5D0C5;
+  color: #B85450;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover { background: #FCEBEB; border-color: #B85450; }
+
+/* HISTORY PANEL */
+.history-panel {
+  background: #FDFBF8;
+  border: 1px solid #DDD9CF;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.history-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.no-history {
+  padding: 20px;
+  text-align: center;
+  color: #A09A92;
+  font-size: 13px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #EAE6DC;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background: #F5F2EC; }
+
+.history-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.history-date {
+  font-size: 12px;
+  color: #8A8580;
+  min-width: 140px;
+}
+
+.history-scores {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1C1C1E;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.badge-mode {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge-mode.standard { background: #EAF3DE; color: #3B6D11; }
+.badge-mode.aggressive { background: #FAEEDA; color: #854F0B; }

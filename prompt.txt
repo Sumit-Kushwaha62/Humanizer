@@ -1,0 +1,21 @@
+
+
+
+iss zip ko dekho yaha pr mai ek humazider ready kr rha hu jo ai written hindi, english text ya word file ko humnize karta hai to ab 
+mai iss me kuch features ko add karna chahta hu uske liye step by step guide kro mujhe 
+
+- proper authentication with google as well
+- history data with copy and downlaod button 
+
+ab mujhe step by step guide kro ab kaise ye sab impliment kru aur kaise ye sab ho skta hai 
+
+
+
+
+
+
+
+
+
+
+

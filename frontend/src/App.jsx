@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { supabase } from './supabase.js';
 import './App.css';
 
 //const API = 'https://humanizer-47dt.onrender.com';
@@ -92,6 +93,59 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const fileRef = useRef();
 
+  // Auth & History State
+  const [user, setUser] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = () => supabase.auth.signInWithOAuth({ 
+    provider: 'google', 
+    options: { redirectTo: 'https://humanizer-frontend-ji1t.onrender.com' } 
+  });
+  
+  const handleLogout = () => supabase.auth.signOut();
+
+  const loadHistory = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('history')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (!error) setHistory(data);
+  };
+
+  useEffect(() => {
+    if (showHistory && user) loadHistory();
+  }, [showHistory, user]);
+
+  const saveToHistory = async (input, output, mode, stats) => {
+    if (!user) return;
+    await supabase.from('history').insert({
+      user_id: user.id,
+      input_text: input,
+      output_text: output,
+      mode: mode,
+      score_before: stats.scoreBefore,
+      score_after: stats.scoreAfter
+    });
+    if (showHistory) loadHistory();
+  };
+
   const wordCount = (t) => t.trim() ? t.trim().split(/\s+/).length : 0;
 
   const handleTextHumanize = async () => {
@@ -106,6 +160,7 @@ export default function App() {
       } else {
         setSessionApiSaved(prev => prev + 1);
       }
+      saveToHistory(inputText, data.result, mode, data.stats);
     } catch {
       setError('Request failed. Check if backend is running.');
     }
@@ -128,20 +183,23 @@ export default function App() {
       } else {
         setSessionApiSaved(prev => prev + 1);
       }
+      saveToHistory(`File: ${file.name}`, data.result, mode, data.stats);
     } catch {
       setError('File processing failed.');
     }
     setLoading(false);
   };
 
-  const copyOutput = () => {
-    navigator.clipboard.writeText(outputText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyOutput = (text = outputText) => {
+    navigator.clipboard.writeText(text);
+    if (text === outputText) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
-  const downloadOutput = () => {
-    const blob = new Blob([outputText], { type: 'text/plain' });
+  const downloadOutput = (text = outputText) => {
+    const blob = new Blob([text], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'humanized.txt';
@@ -153,7 +211,20 @@ export default function App() {
       {/* HEADER */}
       <header className="header">
         <div className="logo">human<span>izer</span></div>
-        <div className="header-badge">Powered by Gemini AI</div>
+        <div className="header-actions">
+          {user ? (
+            <div className="user-info">
+              <button className="btn-sm" onClick={() => setShowHistory(!showHistory)}>
+                {showHistory ? 'Close History' : 'History'}
+              </button>
+              <span className="user-email">{user.email}</span>
+              <button className="logout-btn" onClick={handleLogout}>Logout</button>
+            </div>
+          ) : (
+            <button className="login-btn" onClick={handleLogin}>Login with Google</button>
+          )}
+          <div className="header-badge">Powered by Gemini AI</div>
+        </div>
       </header>
 
       {/* BODY */}
@@ -176,6 +247,36 @@ export default function App() {
             </select>
           </div>
         </div>
+
+        {/* HISTORY PANEL */}
+        {showHistory && (
+          <div className="history-panel">
+            <div className="panel-header">
+              <span className="panel-title">Recent History</span>
+            </div>
+            <div className="history-list">
+              {history.length === 0 ? (
+                <p className="no-history">No humanization history yet.</p>
+              ) : (
+                history.map((item) => (
+                  <div key={item.id} className="history-item" onClick={() => { setOutputText(item.output_text); setShowHistory(false); }}>
+                    <div className="history-meta">
+                      <span className="history-date">{new Date(item.created_at).toLocaleString()}</span>
+                      <span className={`badge-mode ${item.mode}`}>{item.mode}</span>
+                      <span className="history-scores">
+                        {item.score_before} → {item.score_after}
+                      </span>
+                    </div>
+                    <div className="history-actions">
+                      <button className="btn-sm" onClick={(e) => { e.stopPropagation(); copyOutput(item.output_text); }}>📋</button>
+                      <button className="btn-sm" onClick={(e) => { e.stopPropagation(); downloadOutput(item.output_text); }}>⬇</button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         {/* STATS BAR */}
         {stats && (
@@ -244,12 +345,12 @@ export default function App() {
               <div className="output-actions">
                 <button
                   className={`btn-sm ${copied ? 'btn-copied' : ''}`}
-                  onClick={copyOutput}
+                  onClick={() => copyOutput()}
                   disabled={!outputText}
                 >
                   {copied ? '✓ Copied!' : '📋 Copy'}
                 </button>
-                <button className="btn-sm" onClick={downloadOutput} disabled={!outputText}>
+                <button className="btn-sm" onClick={() => downloadOutput()} disabled={!outputText}>
                   ⬇ Download
                 </button>
               </div>
